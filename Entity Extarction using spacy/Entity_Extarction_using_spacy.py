@@ -24,14 +24,13 @@ class GetInfo:
             # print(token.text,token.dep_,[ancestor.text for ancestor in token.ancestors])
         return IndirectDep
 
-    def NER(self,sentrecived,nlp):
-        doc = nlp(sent)        
+    def NER(self,doc):
+        NerList=[]
+        html = displacy.render(doc, style="ent", page=True)
         for ent in doc.ents:
-            print("hello")
-    
-    def ShowDependency(self, sentence, nlp):
-        doc = nlp(sent)
-        displacy.serve(doc, style="dep")
+            print(str(ent.label_)+' : '+ str(ent.lower_))
+            NerList.append(str(ent.label_)+' : '+ str(ent.lower_))
+        return NerList
 
 
 '''Main Api handler'''
@@ -42,34 +41,30 @@ def heartbeat():
     print("HeartBeat")
     return 'Service is up again n again'
 
-@app.route("/GetDependencyList", methods=["GET"])
+@app.route("/GetNER", methods=["GET"])
 def StartNLPService():
-   Possible_List_of_Org=[]   
+   List_of_Entity=[]   
    DirectDependencies=[]
-   IndirectDependencies=[]
-   PurchaseAmount=''
-   ClosingDate=''
-   InitialEarnestMoney=''
-   AdditionalEarnestMoney=''
-   TIN=''
-   InspectionPeriod=''
-   sent = request.args['sent']
-   keyword=request.args['key']
-   sent=sent.replace('URISEPEREATOR','&')   
-   result = []   
-   
-
-   if keyword=='Buyer' or keyword=='Seller':
-        doc = nlp(sent)
-        ObjForInformationExtraction = GetInfo()
-        Possible_List_of_Org = ObjForInformationExtraction.NER(sent,nlp)        
-        DirectDependencies = ObjForInformationExtraction.GetDirectDependencyForNLP(doc)
-        IndirectDependencies = ObjForInformationExtraction.GetIndirectDependencyForNLP(doc)
+   IndirectDependencies=[]   
+   sent = request.args['sent']     
+   result = []
+   doc = nlp(sent)
+   ObjForInformationExtraction = GetInfo()
+   List_of_Entity = ObjForInformationExtraction.NER(doc)        
+   DirectDependencies = ObjForInformationExtraction.GetDirectDependencyForNLP(doc)
+   IndirectDependencies = ObjForInformationExtraction.GetIndirectDependencyForNLP(doc)
         
-   return jsonify({'NERList': Possible_List_of_Org,
+   return jsonify({'NERList': List_of_Entity,
                    'DirectDependencies' : DirectDependencies,
                    'IndirectDependencies': IndirectDependencies                  
                 })
+
+@app.route("/GetDependencyList", methods=["GET"])
+def GetDependency():
+    sent = request.args['sent']
+    doc = nlp(sent)
+    html = displacy.render(doc, style="dep", page=True)
+    print("hello")
 
 if __name__=="__main__":
     app.run()
